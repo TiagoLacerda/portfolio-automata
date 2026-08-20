@@ -4,6 +4,7 @@ import 'package:overlay_options_button/overlay_options_button.dart';
 import 'package:portfolio_design_system/portfolio_design_system.dart';
 
 import '../../app_controller.dart';
+import '../../core/grid/widgets/grid_widget.dart';
 import 'home_controller.dart';
 
 class HomeView extends StatelessWidget {
@@ -52,6 +53,15 @@ class HomeView extends StatelessWidget {
             },
           );
 
+          final clearButton = IconButton(
+            onPressed: () {
+              controller.grid.clear();
+            },
+            icon: Icon(
+              Icons.delete_outline_rounded,
+            ),
+          );
+
           return Scaffold(
             appBar: AppBar(
               toolbarHeight: 80.0,
@@ -76,10 +86,44 @@ class HomeView extends StatelessWidget {
                 ),
               ],
             ),
-            body: Center(
-              child: Text(
-                'automata',
-              ),
+            body: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SingleChildScrollView(
+                  padding: EdgeInsets.all(spacing),
+                  child: Column(
+                    spacing: spacing,
+                    children: [
+                      clearButton,
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SizedBox.expand(
+                    child: GridWidget(
+                      grid: controller.grid,
+                    ),
+                  ),
+                ),
+                // SingleChildScrollView(
+                //   padding: EdgeInsets.all(spacing),
+                //   child: Column(
+                //     spacing: spacing,
+                //     children: [
+                //       Container(
+                //         width: 160,
+                //         height: 160,
+                //         color: Colors.white,
+                //       ),
+                //       Container(
+                //         width: 160,
+                //         height: 160,
+                //         color: Colors.white,
+                //       ),
+                //     ],
+                //   ),
+                // ),
+              ],
             ),
           );
         },
