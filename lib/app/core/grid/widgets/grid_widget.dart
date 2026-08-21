@@ -22,7 +22,7 @@ class GridWidget extends StatefulWidget {
 class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateMixin {
   late final Timer timer;
 
-  double zoom = 1.0;
+  double zoom = 5.0;
   Offset offset = Offset.zero;
 
   Offset? panStart;
@@ -161,6 +161,10 @@ class GridPainter extends CustomPainter {
   final Offset offset;
   final bool isDark;
 
+  late final cellPaint = Paint()
+    ..color = isDark ? Color(0xFFFFFFFF) : Color(0xFF000000)
+    ..isAntiAlias = false;
+
   GridPainter({
     required this.grid,
     required this.zoom,
@@ -195,10 +199,6 @@ class GridPainter extends CustomPainter {
       size.height / zoom,
     );
 
-    final cellPaint = Paint()
-      ..color = isDark ? Color(0xFFFFFFFF) : Color(0xFF000000)
-      ..isAntiAlias = false;
-
     for (final coordinates in getChunks(visibleRect)) {
       final chunk = grid.getChunk(
         coordinates.i,
@@ -209,22 +209,19 @@ class GridPainter extends CustomPainter {
         continue;
       }
 
-      for (var j = 0; j < chunk.size; j++) {
-        for (var i = 0; i < chunk.size; i++) {
-          if (chunk.get(i, j) != 1) {
-            continue;
-          }
+      for (final index in chunk.nonZeroIndexes) {
+        final i = index ~/ chunk.size;
+        final j = index % chunk.size;
 
-          canvas.drawRect(
-            Rect.fromLTWH(
-              coordinates.i * scaledChunkSize + i * cellSize + offset.dx,
-              coordinates.j * scaledChunkSize + j * cellSize + offset.dy,
-              cellSize,
-              cellSize,
-            ),
-            cellPaint,
-          );
-        }
+        canvas.drawRect(
+          Rect.fromLTWH(
+            coordinates.i * scaledChunkSize + i * cellSize + offset.dx,
+            coordinates.j * scaledChunkSize + j * cellSize + offset.dy,
+            cellSize,
+            cellSize,
+          ),
+          cellPaint,
+        );
       }
     }
   }
