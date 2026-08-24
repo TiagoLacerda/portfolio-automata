@@ -53,14 +53,25 @@ class HomeView extends StatelessWidget {
             },
           );
 
+          final updateButton = IconButton(
+            onPressed: () {
+              controller.toggle();
+            },
+            icon: Icon(
+              Icons.play_arrow_outlined,
+            ),
+          );
+
           final clearButton = IconButton(
             onPressed: () {
-              controller.grid.clear();
+              controller.game.clear();
             },
             icon: Icon(
               Icons.delete_outline_rounded,
             ),
           );
+
+          final cellColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
 
           return Scaffold(
             appBar: AppBar(
@@ -94,6 +105,7 @@ class HomeView extends StatelessWidget {
                   child: Column(
                     spacing: spacing,
                     children: [
+                      updateButton,
                       clearButton,
                     ],
                   ),
@@ -101,28 +113,35 @@ class HomeView extends StatelessWidget {
                 Expanded(
                   child: SizedBox.expand(
                     child: GridWidget(
-                      grid: controller.grid,
+                      grid: controller.game.grid,
                     ),
                   ),
                 ),
-                // SingleChildScrollView(
-                //   padding: EdgeInsets.all(spacing),
-                //   child: Column(
-                //     spacing: spacing,
-                //     children: [
-                //       Container(
-                //         width: 160,
-                //         height: 160,
-                //         color: Colors.white,
-                //       ),
-                //       Container(
-                //         width: 160,
-                //         height: 160,
-                //         color: Colors.white,
-                //       ),
-                //     ],
-                //   ),
-                // ),
+                SingleChildScrollView(
+                  padding: EdgeInsets.all(spacing),
+                  child: Column(
+                    spacing: spacing,
+                    children: [
+                      Container(
+                        width: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
+                        height: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
+                        color: cellColor.withValues(alpha: 0.5),
+                        child: GridWidget<int>(
+                          grid: controller.game.neighborhood,
+                          initialZoom: controller.initialZoom,
+                          initalOffset: controller.initialOffset,
+                          enableEditing: true,
+                          enablePanAndZoom: false,
+                          colorWith: (i, j, value) {
+                            if (i == 0 && j == 0) return Colors.red;
+                            if (value != 0) return cellColor;
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           );

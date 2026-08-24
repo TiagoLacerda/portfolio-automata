@@ -7,47 +7,61 @@ import '../../../core/grid/coordinates.dart';
 import '../../../core/grid/grid.dart';
 import '../grid_extensions.dart';
 
-class GridWidget extends StatefulWidget {
-  final Grid grid;
+class GridWidget<T extends num> extends StatefulWidget {
+  final Grid<T> grid;
+  final double initialZoom;
+  final Offset initalOffset;
+  final bool enableEditing;
+  final bool enablePanAndZoom;
+  final Color? Function(int i, int j, T value)? colorWith;
 
   const GridWidget({
     super.key,
     required this.grid,
+    this.initialZoom = 5.0,
+    this.initalOffset = Offset.zero,
+    this.enableEditing = true,
+    this.enablePanAndZoom = true,
+    this.colorWith,
   });
 
   @override
-  State<GridWidget> createState() => _GridWidgetState();
+  State<GridWidget<T>> createState() => _GridWidgetState<T>();
 }
 
-class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateMixin {
+class _GridWidgetState<T extends num> extends State<GridWidget<T>> with SingleTickerProviderStateMixin {
   late final Timer timer;
 
-  double zoom = 5.0;
-  Offset offset = Offset.zero;
+  late double zoom;
+  late Offset offset;
 
   Offset? panStart;
 
   int? previousI;
   int? previousJ;
 
+  T pencil = 1 as T;
+
   void onPointerDown(PointerDownEvent event) {
-    if (event.buttons == kMiddleMouseButton) {
+    if (widget.enablePanAndZoom && event.buttons == kMiddleMouseButton) {
       panStart = event.localPosition;
       return;
     }
 
-    if (event.buttons == kPrimaryMouseButton) {
+    if (widget.enableEditing && event.buttons == kPrimaryMouseButton) {
       final cell = screenToCell(event.localPosition);
 
       previousI = cell.i;
       previousJ = cell.j;
 
-      widget.grid.set(cell.i, cell.j, 1);
+      pencil = widget.grid.get(cell.i, cell.j) == 0 ? 1 as T : 0 as T;
+
+      widget.grid.set(cell.i, cell.j, pencil);
     }
   }
 
   void onPointerMove(PointerMoveEvent event) {
-    if (event.buttons == kMiddleMouseButton) {
+    if (widget.enablePanAndZoom && event.buttons == kMiddleMouseButton) {
       if (panStart != null) {
         final delta = event.localPosition - panStart!;
 
@@ -60,7 +74,7 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
       return;
     }
 
-    if (event.buttons == kPrimaryMouseButton) {
+    if (widget.enableEditing && event.buttons == kPrimaryMouseButton) {
       final cell = screenToCell(event.localPosition);
 
       if (previousI != null && previousJ != null) {
@@ -69,6 +83,7 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
           previousJ!,
           cell.i,
           cell.j,
+          pencil,
         );
       }
 
@@ -80,11 +95,11 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
   }
 
   void onPointerUp(PointerUpEvent event) {
-    if (event.buttons == kMiddleMouseButton) {
+    if (widget.enablePanAndZoom && event.buttons == kMiddleMouseButton) {
       panStart = null;
     }
 
-    if (event.buttons == kPrimaryMouseButton) {
+    if (widget.enableEditing && event.buttons == kPrimaryMouseButton) {
       previousI = null;
       previousJ = null;
     }
@@ -94,6 +109,8 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
     if (event is! PointerScrollEvent) {
       return;
     }
+
+    if (!widget.enablePanAndZoom) return;
 
     final mouse = event.localPosition;
     final oldZoom = zoom;
@@ -123,6 +140,9 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
   void initState() {
     super.initState();
 
+    zoom = widget.initialZoom;
+    offset = widget.initalOffset;
+
     timer = Timer.periodic(
       const Duration(milliseconds: 16),
       (_) => setState(() {}),
@@ -137,39 +157,41 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
+
+    final colorWith = widget.colorWith ?? (i, j, value) => value == 0 ? null : color;
+
     return Listener(
       onPointerDown: onPointerDown,
       onPointerMove: onPointerMove,
       onPointerUp: onPointerUp,
       onPointerSignal: onPointerSignal,
-      child: CustomPaint(
-        painter: GridPainter(
-          grid: widget.grid,
-          zoom: zoom,
-          offset: offset,
-          isDark: Theme.of(context).brightness == Brightness.dark,
+      child: ClipRect(
+        child: CustomPaint(
+          painter: GridPainter(
+            grid: widget.grid,
+            zoom: zoom,
+            offset: offset,
+            colorWith: colorWith,
+          ),
+          size: Size.infinite,
         ),
-        size: Size.infinite,
       ),
     );
   }
 }
 
-class GridPainter extends CustomPainter {
-  final Grid grid;
+class GridPainter<T extends num> extends CustomPainter {
+  final Grid<T> grid;
   final double zoom;
   final Offset offset;
-  final bool isDark;
-
-  late final cellPaint = Paint()
-    ..color = isDark ? Color(0xFFFFFFFF) : Color(0xFF000000)
-    ..isAntiAlias = false;
+  final Color? Function(int i, int j, T value) colorWith;
 
   GridPainter({
     required this.grid,
     required this.zoom,
     required this.offset,
-    required this.isDark,
+    required this.colorWith,
   });
 
   List<Coordinates> getChunks(Rect visibleRect) {
@@ -192,6 +214,8 @@ class GridPainter extends CustomPainter {
     final cellSize = zoom;
     final scaledChunkSize = grid.chunkSize * cellSize;
 
+    final paint = Paint()..isAntiAlias = false;
+
     final visibleRect = Rect.fromLTWH(
       -offset.dx / zoom,
       -offset.dy / zoom,
@@ -212,6 +236,11 @@ class GridPainter extends CustomPainter {
       for (final index in chunk.nonZeroIndexes) {
         final i = index ~/ chunk.size;
         final j = index % chunk.size;
+        final value = chunk.get(i, j);
+        final color = colorWith(i, j, value as T);
+
+        if (color == null) continue;
+        if (color != paint.color) paint.color = color;
 
         canvas.drawRect(
           Rect.fromLTWH(
@@ -220,7 +249,7 @@ class GridPainter extends CustomPainter {
             cellSize,
             cellSize,
           ),
-          cellPaint,
+          paint,
         );
       }
     }

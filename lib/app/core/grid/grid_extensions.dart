@@ -1,7 +1,7 @@
 import 'grid.dart';
 
 extension GridBresenham<T extends num> on Grid {
-  void bresenham(int i, int j, int y, int x) {
+  void bresenham(int i, int j, int y, int x, T value) {
     var x0 = i;
     var y0 = j;
     final x1 = y;
@@ -16,7 +16,7 @@ extension GridBresenham<T extends num> on Grid {
     var error = dx - dy;
 
     while (true) {
-      set(x0, y0, 1);
+      set(x0, y0, value);
 
       if (x0 == x1 && y0 == y1) {
         break;
