@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "portfolio-8b527"
+  },
+  "targets": {
+    "portfolio-8b527": {
+      "hosting": {
+        "automata": [
+          "portfolio-8b527-automata"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
