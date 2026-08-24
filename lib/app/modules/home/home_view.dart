@@ -5,6 +5,7 @@ import 'package:portfolio_design_system/portfolio_design_system.dart';
 
 import '../../app_controller.dart';
 import '../../core/grid/widgets/grid_widget.dart';
+import '../../core/mathematical_morphology/mathematical_morphology.dart';
 import 'home_controller.dart';
 
 class HomeView extends StatelessWidget {
@@ -71,6 +72,16 @@ class HomeView extends StatelessWidget {
             ),
           );
 
+          final complementButton = IconButton(
+            onPressed: () {
+              controller.game.grid = MathematicalMorphology.complement(controller.game.grid);
+              controller.notify();
+            },
+            icon: Icon(
+              Icons.flip_outlined,
+            ),
+          );
+
           final cellColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
 
           return Scaffold(
@@ -107,6 +118,7 @@ class HomeView extends StatelessWidget {
                     children: [
                       updateButton,
                       clearButton,
+                      complementButton,
                     ],
                   ),
                 ),
@@ -137,6 +149,18 @@ class HomeView extends StatelessWidget {
                             if (value != 0) return cellColor;
                             return null;
                           },
+                        ),
+                      ),
+                      Container(
+                        width: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
+                        height: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
+                        color: cellColor.withValues(alpha: 0.5),
+                        child: GridWidget<int>(
+                          grid: controller.structuringElement,
+                          initialZoom: controller.initialZoom,
+                          initalOffset: controller.initialOffset,
+                          enableEditing: true,
+                          enablePanAndZoom: false,
                         ),
                       ),
                     ],
