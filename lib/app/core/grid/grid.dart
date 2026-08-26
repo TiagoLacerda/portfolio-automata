@@ -1,25 +1,25 @@
 import 'chunk.dart';
 import 'coordinates.dart';
 
-final class Grid<T extends num> {
+final class Grid<T> {
   final int chunkSize;
+  final T defaultValue;
 
   final Map<Coordinates, Chunk<T>> _chunks;
-
   final Set<Coordinates> _locked;
 
   Grid({
     this.chunkSize = 64,
+    required this.defaultValue,
   }) : _chunks = {},
        _locked = {};
 
   T get(int i, int j) {
     final chunkCoordinates = _getChunkCoordinates(i, j, chunkSize);
-
     final chunk = _chunks[chunkCoordinates];
 
     if (chunk == null) {
-      return 0 as T;
+      return defaultValue;
     }
 
     final cellCoordinates = _getLocalCoordinates(i, j, chunkSize);
@@ -28,13 +28,19 @@ final class Grid<T extends num> {
   }
 
   void set(int i, int j, T value) {
+    if (_locked.contains(Coordinates(i, j))) return;
+
     final chunkCoordinates = _getChunkCoordinates(i, j, chunkSize);
     final cellCoordinates = _getLocalCoordinates(i, j, chunkSize);
 
-    if (_locked.contains(cellCoordinates)) return;
-
-    if (value != 0) {
-      final chunk = _chunks.putIfAbsent(chunkCoordinates, () => Chunk(size: chunkSize));
+    if (value != defaultValue) {
+      final chunk = _chunks.putIfAbsent(
+        chunkCoordinates,
+        () => Chunk<T>(
+          size: chunkSize,
+          defaultValue: defaultValue,
+        ),
+      );
 
       chunk.set(cellCoordinates.i, cellCoordinates.j, value);
     } else {
@@ -58,14 +64,14 @@ final class Grid<T extends num> {
     _chunks.clear();
   }
 
-  Chunk? getChunk(int i, int j) => _chunks[Coordinates(i, j)];
+  Chunk<T>? getChunk(int i, int j) => _chunks[Coordinates(i, j)];
 
-  Iterable<(int, int, T)> get nonZeroCells sync* {
+  Iterable<(int, int, T)> get nonDefaultCells sync* {
     for (final entry in _chunks.entries) {
       final chunkCoordinates = entry.key;
       final chunk = entry.value;
 
-      for (final index in chunk.nonZeroIndexes) {
+      for (final index in chunk.nonDefaultIndexes) {
         final i = index ~/ chunk.size;
         final j = index % chunk.size;
 

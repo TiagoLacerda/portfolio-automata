@@ -4,8 +4,8 @@ import 'package:overlay_options_button/overlay_options_button.dart';
 import 'package:portfolio_design_system/portfolio_design_system.dart';
 
 import '../../app_controller.dart';
+import '../../core/grid/grid_io.dart';
 import '../../core/grid/widgets/grid_widget.dart';
-import '../../core/mathematical_morphology/mathematical_morphology.dart';
 import 'home_controller.dart';
 
 class HomeView extends StatelessWidget {
@@ -54,6 +54,19 @@ class HomeView extends StatelessWidget {
             },
           );
 
+          final loadButton = IconButton(
+            onPressed: () async {
+              final grid = await GridIO.pick<int>();
+
+              if (grid == null) return;
+
+              controller.game.grid = grid;
+              controller.notify();
+            },
+            icon: Icon(
+              Icons.upload_rounded,
+            ),
+          );
           final updateButton = IconButton(
             onPressed: () {
               controller.toggle();
@@ -69,16 +82,6 @@ class HomeView extends StatelessWidget {
             },
             icon: Icon(
               Icons.delete_outline_rounded,
-            ),
-          );
-
-          final complementButton = IconButton(
-            onPressed: () {
-              controller.game.grid = MathematicalMorphology.complement(controller.game.grid);
-              controller.notify();
-            },
-            icon: Icon(
-              Icons.flip_outlined,
             ),
           );
 
@@ -116,9 +119,9 @@ class HomeView extends StatelessWidget {
                   child: Column(
                     spacing: spacing,
                     children: [
+                      loadButton,
                       updateButton,
                       clearButton,
-                      complementButton,
                     ],
                   ),
                 ),
@@ -126,6 +129,7 @@ class HomeView extends StatelessWidget {
                   child: SizedBox.expand(
                     child: GridWidget(
                       grid: controller.game.grid,
+                      pencil: 1,
                     ),
                   ),
                 ),
@@ -149,6 +153,7 @@ class HomeView extends StatelessWidget {
                             if (value != 0) return cellColor;
                             return null;
                           },
+                          pencil: 1,
                         ),
                       ),
                       Container(
@@ -161,6 +166,7 @@ class HomeView extends StatelessWidget {
                           initalOffset: controller.initialOffset,
                           enableEditing: true,
                           enablePanAndZoom: false,
+                          pencil: 1,
                         ),
                       ),
                     ],

@@ -6,7 +6,7 @@ class Neighborhoods<T extends num> {
   }) {
     assert(radius > 0);
 
-    final grid = Grid<T>();
+    final grid = Grid<T>(defaultValue: 0 as T);
 
     for (int i = -radius; i <= radius; ++i) {
       for (int j = -radius; j <= radius; ++j) {
@@ -24,7 +24,7 @@ class Neighborhoods<T extends num> {
   }) {
     assert(radius > 0);
 
-    final grid = Grid<T>();
+    final grid = Grid<T>(defaultValue: 0 as T);
 
     for (int i = -radius; i <= radius; ++i) {
       for (int j = -radius; j <= radius; ++j) {

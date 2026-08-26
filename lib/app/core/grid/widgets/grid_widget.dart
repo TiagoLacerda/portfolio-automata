@@ -7,13 +7,14 @@ import '../../../core/grid/coordinates.dart';
 import '../../../core/grid/grid.dart';
 import '../grid_extensions.dart';
 
-class GridWidget<T extends num> extends StatefulWidget {
+class GridWidget<T> extends StatefulWidget {
   final Grid<T> grid;
   final double initialZoom;
   final Offset initalOffset;
   final bool enableEditing;
   final bool enablePanAndZoom;
   final Color? Function(int i, int j, T value)? colorWith;
+  final T pencil;
 
   const GridWidget({
     super.key,
@@ -23,13 +24,14 @@ class GridWidget<T extends num> extends StatefulWidget {
     this.enableEditing = true,
     this.enablePanAndZoom = true,
     this.colorWith,
+    required this.pencil,
   });
 
   @override
   State<GridWidget<T>> createState() => _GridWidgetState<T>();
 }
 
-class _GridWidgetState<T extends num> extends State<GridWidget<T>> with SingleTickerProviderStateMixin {
+class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProviderStateMixin {
   late final Timer timer;
 
   late double zoom;
@@ -40,7 +42,7 @@ class _GridWidgetState<T extends num> extends State<GridWidget<T>> with SingleTi
   int? previousI;
   int? previousJ;
 
-  T pencil = 1 as T;
+  late T brush;
 
   void onPointerDown(PointerDownEvent event) {
     if (widget.enablePanAndZoom && event.buttons == kMiddleMouseButton) {
@@ -54,9 +56,9 @@ class _GridWidgetState<T extends num> extends State<GridWidget<T>> with SingleTi
       previousI = cell.i;
       previousJ = cell.j;
 
-      pencil = widget.grid.get(cell.i, cell.j) == 0 ? 1 as T : 0 as T;
+      brush = widget.grid.get(cell.i, cell.j) == widget.grid.defaultValue ? widget.pencil : widget.grid.defaultValue;
 
-      widget.grid.set(cell.i, cell.j, pencil);
+      widget.grid.set(cell.i, cell.j, brush);
     }
   }
 
@@ -83,7 +85,7 @@ class _GridWidgetState<T extends num> extends State<GridWidget<T>> with SingleTi
           previousJ!,
           cell.i,
           cell.j,
-          pencil,
+          brush,
         );
       }
 
@@ -143,10 +145,23 @@ class _GridWidgetState<T extends num> extends State<GridWidget<T>> with SingleTi
     zoom = widget.initialZoom;
     offset = widget.initalOffset;
 
+    brush = widget.pencil;
+
     timer = Timer.periodic(
-      const Duration(milliseconds: 16),
+      const Duration(milliseconds: 32),
       (_) => setState(() {}),
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant GridWidget<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (brush == oldWidget.pencil) {
+      brush = widget.pencil;
+    } else {
+      brush = widget.grid.defaultValue;
+    }
   }
 
   @override
@@ -181,7 +196,7 @@ class _GridWidgetState<T extends num> extends State<GridWidget<T>> with SingleTi
   }
 }
 
-class GridPainter<T extends num> extends CustomPainter {
+class GridPainter<T> extends CustomPainter {
   final Grid<T> grid;
   final double zoom;
   final Offset offset;
@@ -233,11 +248,11 @@ class GridPainter<T extends num> extends CustomPainter {
         continue;
       }
 
-      for (final index in chunk.nonZeroIndexes) {
+      for (final index in chunk.nonDefaultIndexes) {
         final i = index ~/ chunk.size;
         final j = index % chunk.size;
         final value = chunk.get(i, j);
-        final color = colorWith(i, j, value as T);
+        final color = colorWith(i, j, value);
 
         if (color == null) continue;
         if (color != paint.color) paint.color = color;

@@ -1,14 +1,42 @@
-final class Chunk<T extends num> {
+/// A square chunk of values of type [T].
+///
+/// [T] must have equality semantics such that comparing a value with
+/// [defaultValue] correctly determines whether the cell should be
+/// considered empty.
+final class Chunk<T> {
   final int size;
+  final T defaultValue;
 
   late final List<T> data;
-
-  final Set<int> nonZeroIndexes;
+  late final Set<int> nonDefaultIndexes;
 
   Chunk({
     this.size = 64,
-  }) : nonZeroIndexes = {} {
-    data = List<T>.filled(size * size, 0 as T);
+    required this.defaultValue,
+  }) {
+    assert(size >= 0);
+
+    data = List<T>.filled(size * size, defaultValue);
+    nonDefaultIndexes = {};
+  }
+
+  Chunk<U> map<U>(U Function(T value) transform) {
+    final result = Chunk<U>(
+      size: size,
+      defaultValue: transform(defaultValue),
+    );
+
+    for (final index in nonDefaultIndexes) {
+      final value = transform(data[index]);
+
+      result.data[index] = value;
+
+      if (value != result.defaultValue) {
+        result.nonDefaultIndexes.add(index);
+      }
+    }
+
+    return result;
   }
 
   T get(int i, int j) {
@@ -24,10 +52,10 @@ final class Chunk<T extends num> {
 
     final index = i * size + j;
 
-    if (value == 0) {
-      nonZeroIndexes.remove(index);
+    if (value == defaultValue) {
+      nonDefaultIndexes.remove(index);
     } else {
-      nonZeroIndexes.add(index);
+      nonDefaultIndexes.add(index);
     }
 
     data[index] = value;
@@ -35,11 +63,11 @@ final class Chunk<T extends num> {
 
   void clear() {
     for (int k = 0; k < size * size; ++k) {
-      data[k] = 0 as T;
+      data[k] = defaultValue;
     }
 
-    nonZeroIndexes.clear();
+    nonDefaultIndexes.clear();
   }
 
-  bool get isEmpty => nonZeroIndexes.isEmpty;
+  bool get isEmpty => nonDefaultIndexes.isEmpty;
 }
