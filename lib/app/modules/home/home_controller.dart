@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/automata/automaton.dart';
-import '../../core/grid/grid.dart';
-import '../../core/grid/mathematical_morphology/mathematical_morphology.dart';
 
 final class HomeController with ChangeNotifier {
   final neighborhoodGridSize = 9;
@@ -14,8 +12,6 @@ final class HomeController with ChangeNotifier {
     ((neighborhoodGridSize ~/ 2) * neighborhoodGridCellSize).toDouble(),
     ((neighborhoodGridSize ~/ 2) * neighborhoodGridCellSize).toDouble(),
   );
-
-  final structuringElement = Grid<int>(defaultValue: 0)..set(0, 0, 1);
 
   bool running = true;
 
@@ -39,13 +35,11 @@ final class HomeController with ChangeNotifier {
 
   void toggle() {
     running = !running;
+    notifyListeners();
   }
 
   void update() {
     game.update();
-    game.grid = MathematicalMorphology.binaryClosing(game.grid, structuringElement);
     notifyListeners();
   }
-
-  void notify() => notifyListeners();
 }

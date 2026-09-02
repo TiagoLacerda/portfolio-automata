@@ -4,7 +4,6 @@ import 'package:overlay_options_button/overlay_options_button.dart';
 import 'package:portfolio_design_system/portfolio_design_system.dart';
 
 import '../../app_controller.dart';
-import '../../core/grid/grid_io.dart';
 import '../../core/grid/widgets/grid_widget.dart';
 import 'home_controller.dart';
 
@@ -54,25 +53,12 @@ class HomeView extends StatelessWidget {
             },
           );
 
-          final loadButton = IconButton(
-            onPressed: () async {
-              final grid = await GridIO.pick<int>();
-
-              if (grid == null) return;
-
-              controller.game.grid = grid;
-              controller.notify();
-            },
-            icon: Icon(
-              Icons.upload_rounded,
-            ),
-          );
-          final updateButton = IconButton(
+          final toggleButton = IconButton(
             onPressed: () {
               controller.toggle();
             },
             icon: Icon(
-              Icons.play_arrow_outlined,
+              controller.running ? Icons.pause_outlined : Icons.play_arrow_outlined,
             ),
           );
 
@@ -119,8 +105,7 @@ class HomeView extends StatelessWidget {
                   child: Column(
                     spacing: spacing,
                     children: [
-                      loadButton,
-                      updateButton,
+                      toggleButton,
                       clearButton,
                     ],
                   ),
@@ -153,19 +138,6 @@ class HomeView extends StatelessWidget {
                             if (value != 0) return cellColor;
                             return null;
                           },
-                          pencil: 1,
-                        ),
-                      ),
-                      Container(
-                        width: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
-                        height: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
-                        color: cellColor.withValues(alpha: 0.5),
-                        child: GridWidget<int>(
-                          grid: controller.structuringElement,
-                          initialZoom: controller.initialZoom,
-                          initalOffset: controller.initialOffset,
-                          enableEditing: true,
-                          enablePanAndZoom: false,
                           pencil: 1,
                         ),
                       ),
