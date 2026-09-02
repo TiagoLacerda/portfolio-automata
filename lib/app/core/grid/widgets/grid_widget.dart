@@ -195,8 +195,7 @@ class GridPainter extends CustomPainter {
   });
 
   List<Position> getChunks(Rect visibleRect) {
-    // TODO: This doesnt belong here
-    const chunkSize = 32.0;
+    final chunkSize = grid.chunkSize;
 
     final firstI = (visibleRect.left / chunkSize).floor();
     final firstJ = (visibleRect.top / chunkSize).floor();
