@@ -113,8 +113,7 @@ class HomeView extends StatelessWidget {
                 Expanded(
                   child: SizedBox.expand(
                     child: GridWidget(
-                      grid: controller.game.grid,
-                      pencil: 1,
+                      grid: controller.game.world,
                     ),
                   ),
                 ),
@@ -127,7 +126,7 @@ class HomeView extends StatelessWidget {
                         width: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
                         height: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
                         color: cellColor.withValues(alpha: 0.5),
-                        child: GridWidget<int>(
+                        child: GridWidget(
                           grid: controller.game.neighborhood,
                           initialZoom: controller.initialZoom,
                           initalOffset: controller.initialOffset,
@@ -135,10 +134,8 @@ class HomeView extends StatelessWidget {
                           enablePanAndZoom: false,
                           colorWith: (i, j, value) {
                             if (i == 0 && j == 0) return Colors.red;
-                            if (value != 0) return cellColor;
-                            return null;
+                            return value ? cellColor : null;
                           },
-                          pencil: 1,
                         ),
                       ),
                     ],

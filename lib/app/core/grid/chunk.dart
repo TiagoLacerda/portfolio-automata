@@ -1,73 +1,63 @@
-/// A square chunk of values of type [T].
-///
-/// [T] must have equality semantics such that comparing a value with
-/// [defaultValue] correctly determines whether the cell should be
-/// considered empty.
-final class Chunk<T> {
-  final int size;
-  final T defaultValue;
+import 'dart:typed_data';
 
-  late final List<T> data;
-  late final Set<int> nonDefaultIndexes;
+typedef Position = ({int i, int j});
 
-  Chunk({
-    this.size = 64,
-    required this.defaultValue,
-  }) {
-    assert(size >= 0);
+/// Defines a fixed-size grid of boolean cells.
+abstract interface class IChunk {
+  /// The width and height of the chunk.
+  int get size;
 
-    data = List<T>.filled(size * size, defaultValue);
-    nonDefaultIndexes = {};
-  }
+  /// Whether all cells in the chunk are false.
+  bool get isEmpty;
 
-  Chunk<U> map<U>(U Function(T value) transform) {
-    final result = Chunk<U>(
-      size: size,
-      defaultValue: transform(defaultValue),
-    );
+  /// Positions of all cells whose value is true.
+  Set<Position> get nonZeroPositions;
 
-    for (final index in nonDefaultIndexes) {
-      final value = transform(data[index]);
+  /// Returns the value at the given local coordinates.
+  bool get(int i, int j);
 
-      result.data[index] = value;
+  /// Sets the value at the given local coordinates.
+  void set(int i, int j, bool value);
 
-      if (value != result.defaultValue) {
-        result.nonDefaultIndexes.add(index);
-      }
-    }
+  /// Sets all cells to false.
+  void clear();
+}
 
-    return result;
-  }
+final class UInt32Chunk implements IChunk {
+  static const _size = 32;
 
-  T get(int i, int j) {
-    assert(0 <= i && i < size);
-    assert(0 <= j && j < size);
+  final Uint32List _data;
 
-    return data[i * size + j];
-  }
+  UInt32Chunk() : _data = Uint32List(_size);
 
-  void set(int i, int j, T value) {
-    assert(0 <= i && i < size);
-    assert(0 <= j && j < size);
+  @override
+  final Set<Position> nonZeroPositions = {};
 
-    final index = i * size + j;
+  @override
+  int get size => _size;
 
-    if (value == defaultValue) {
-      nonDefaultIndexes.remove(index);
+  @override
+  bool get isEmpty => nonZeroPositions.isEmpty;
+
+  @override
+  bool get(int i, int j) => (_data[i] & (1 << j)) != 0;
+
+  @override
+  void set(int i, int j, bool value) {
+    final position = (i: i, j: j);
+
+    if (value) {
+      _data[i] |= 1 << j;
+      nonZeroPositions.add(position);
     } else {
-      nonDefaultIndexes.add(index);
+      _data[i] &= ~(1 << j);
+      nonZeroPositions.remove(position);
     }
-
-    data[index] = value;
   }
 
+  @override
   void clear() {
-    for (int k = 0; k < size * size; ++k) {
-      data[k] = defaultValue;
-    }
-
-    nonDefaultIndexes.clear();
+    _data.fillRange(0, size, 0);
+    nonZeroPositions.clear();
   }
-
-  bool get isEmpty => nonDefaultIndexes.isEmpty;
 }

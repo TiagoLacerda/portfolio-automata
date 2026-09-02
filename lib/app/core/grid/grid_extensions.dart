@@ -1,7 +1,7 @@
 import 'grid.dart';
 
-extension Bresenham<T> on Grid {
-  void bresenham(int i, int j, int y, int x, T value) {
+extension Bresenham on IGrid {
+  void bresenham(int i, int j, int y, int x, bool value) {
     var x0 = i;
     var y0 = j;
     final x1 = y;

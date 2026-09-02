@@ -13,7 +13,7 @@ final class HomeController with ChangeNotifier {
     ((neighborhoodGridSize ~/ 2) * neighborhoodGridCellSize).toDouble(),
   );
 
-  bool running = true;
+  bool running = false;
 
   late final Timer timer;
 
@@ -21,16 +21,13 @@ final class HomeController with ChangeNotifier {
 
   HomeController() {
     timer = Timer.periodic(
-      const Duration(milliseconds: 32),
+      Duration(milliseconds: (1000 / 20).toInt()),
       (_) {
         if (running) {
           update();
         }
       },
     );
-
-    game.neighborhood.set(0, 0, 2);
-    game.neighborhood.lock(0, 0);
   }
 
   void toggle() {

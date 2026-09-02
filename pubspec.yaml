@@ -27,6 +27,7 @@ dependencies:
   flutter_svg: ^2.2.3
   go_router: ^17.2.3
   modular_localization: ^1.0.0
+  typed_data: ^1.4.0
   web: ^1.1.1
 
 dev_dependencies:

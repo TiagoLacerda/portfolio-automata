@@ -1,83 +1,96 @@
 import '../grid/grid.dart';
-import '../grid/grid_extensions.dart';
-import '../grid/neighborhoods.dart';
 
-class Automaton {
-  Grid<int> grid;
+abstract interface class IAutomaton {
+  IGrid get world;
+  IGrid get neighborhood;
 
-  final Grid<int> neighborhood;
+  bool get(int i, int j);
+  void set(int i, int j, bool value);
+  void clear();
 
-  final (int, int) stable = (2, 3);
-  final (int, int) birth = (3, 3);
+  void update();
+}
 
-  Automaton({Grid<int>? neighborhood})
-    : grid = Grid<int>(defaultValue: 0),
-      neighborhood = neighborhood ?? Neighborhoods<int>().moore();
+final class Automaton implements IAutomaton {
+  UInt32Grid _world;
 
-  int get(int i, int j) => grid.get(i, j);
-
-  void set(int i, int j, int value) {
-    grid.set(i, j, value);
+  Automaton() : _world = UInt32Grid(), neighborhood = UInt32Grid() {
+    for (int i = -1; i <= 1; ++i) {
+      for (int j = -1; j <= 1; ++j) {
+        neighborhood.set(i, j, true);
+      }
+    }
   }
 
-  void clear() => grid.clear();
+  @override
+  UInt32Grid get world => _world;
 
+  @override
+  final UInt32Grid neighborhood;
+
+  @override
+  bool get(int i, int j) => _world.get(i, j);
+
+  @override
+  void set(int i, int j, bool value) => _world.set(i, j, value);
+
+  @override
+  void clear() => _world.clear();
+
+  @override
   void update() {
-    final next = Grid<int>(defaultValue: grid.defaultValue);
+    final next = UInt32Grid();
 
     final Set<(int, int)> candidatesToBeBorn = {};
 
-    // Count neighbors around every live cell.
-    for (final (i, j, _) in grid.nonDefaultCells) {
+    for (final position in _world.nonZeroPositions) {
       int neighborsAlive = 0;
 
-      for (final (di, dj, _) in neighborhood.nonDefaultCells) {
-        if (di == 0 && dj == 0) continue;
+      for (final delta in neighborhood.nonZeroPositions) {
+        if (delta.i == 0 && delta.j == 0) continue;
 
-        final ni = i + di;
-        final nj = j + dj;
+        final ni = position.i + delta.i;
+        final nj = position.j + delta.j;
 
-        final neighbor = grid.get(ni, nj);
+        final neighbor = _world.get(ni, nj);
 
-        if (neighbor == 0) {
-          candidatesToBeBorn.add((ni, nj));
-        } else {
+        if (neighbor) {
           neighborsAlive += 1;
+        } else {
+          candidatesToBeBorn.add((ni, nj));
         }
       }
 
-      final survives = neighborsAlive >= stable.$1 && neighborsAlive <= stable.$2;
+      final survives = neighborsAlive == 2 || neighborsAlive == 3;
 
       if (survives) {
-        next.set(i, j, 1);
+        next.set(position.i, position.j, true);
       }
     }
 
     for (final (i, j) in candidatesToBeBorn) {
       int neighborsAlive = 0;
 
-      for (final (di, dj, _) in neighborhood.nonDefaultCells) {
-        if (di == 0 && dj == 0) continue;
+      for (final delta in neighborhood.nonZeroPositions) {
+        if (delta.i == 0 && delta.j == 0) continue;
 
-        final ni = i + di;
-        final nj = j + dj;
+        final ni = i + delta.i;
+        final nj = j + delta.j;
 
-        final neighbor = grid.get(ni, nj);
+        final neighbor = _world.get(ni, nj);
 
-        if (neighbor != 0) {
+        if (neighbor) {
           neighborsAlive += 1;
         }
       }
 
-      final born = neighborsAlive >= birth.$1 && neighborsAlive <= birth.$2;
+      final born = neighborsAlive >= 3 && neighborsAlive <= 3;
 
       if (born) {
-        next.set(i, j, 1);
+        next.set(i, j, true);
       }
     }
 
-    grid = next;
+    _world = next;
   }
-
-  void bresenham(int i, int j, int y, int x, int value) => grid.bresenham(i, j, y, x, value);
 }

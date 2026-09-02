@@ -3,18 +3,17 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/grid/coordinates.dart';
 import '../../../core/grid/grid.dart';
+import '../chunk.dart';
 import '../grid_extensions.dart';
 
-class GridWidget<T> extends StatefulWidget {
-  final Grid<T> grid;
+class GridWidget extends StatefulWidget {
+  final IGrid grid;
   final double initialZoom;
   final Offset initalOffset;
   final bool enableEditing;
   final bool enablePanAndZoom;
-  final Color? Function(int i, int j, T value)? colorWith;
-  final T pencil;
+  final Color? Function(int i, int j, bool value)? colorWith;
 
   const GridWidget({
     super.key,
@@ -24,14 +23,13 @@ class GridWidget<T> extends StatefulWidget {
     this.enableEditing = true,
     this.enablePanAndZoom = true,
     this.colorWith,
-    required this.pencil,
   });
 
   @override
-  State<GridWidget<T>> createState() => _GridWidgetState<T>();
+  State<GridWidget> createState() => _GridWidgetState();
 }
 
-class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProviderStateMixin {
+class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateMixin {
   late final Timer timer;
 
   late double zoom;
@@ -42,7 +40,7 @@ class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProvider
   int? previousI;
   int? previousJ;
 
-  late T brush;
+  bool brush = true;
 
   void onPointerDown(PointerDownEvent event) {
     if (widget.enablePanAndZoom && event.buttons == kMiddleMouseButton) {
@@ -51,14 +49,14 @@ class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProvider
     }
 
     if (widget.enableEditing && event.buttons == kPrimaryMouseButton) {
-      final cell = screenToCell(event.localPosition);
+      final position = screenToWorld(event.localPosition);
 
-      previousI = cell.i;
-      previousJ = cell.j;
+      previousI = position.i;
+      previousJ = position.j;
 
-      brush = widget.grid.get(cell.i, cell.j) == widget.grid.defaultValue ? widget.pencil : widget.grid.defaultValue;
+      brush = !widget.grid.get(position.i, position.j);
 
-      widget.grid.set(cell.i, cell.j, brush);
+      widget.grid.set(position.i, position.j, brush);
     }
   }
 
@@ -77,7 +75,7 @@ class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProvider
     }
 
     if (widget.enableEditing && event.buttons == kPrimaryMouseButton) {
-      final cell = screenToCell(event.localPosition);
+      final cell = screenToWorld(event.localPosition);
 
       if (previousI != null && previousJ != null) {
         widget.grid.bresenham(
@@ -131,10 +129,10 @@ class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProvider
     });
   }
 
-  Coordinates screenToCell(Offset position) {
-    return Coordinates(
-      ((position.dx - offset.dx) / zoom).floor(),
-      ((position.dy - offset.dy) / zoom).floor(),
+  Position screenToWorld(Offset position) {
+    return (
+      i: ((position.dx - offset.dx) / zoom).floor(),
+      j: ((position.dy - offset.dy) / zoom).floor(),
     );
   }
 
@@ -145,23 +143,10 @@ class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProvider
     zoom = widget.initialZoom;
     offset = widget.initalOffset;
 
-    brush = widget.pencil;
-
     timer = Timer.periodic(
-      const Duration(milliseconds: 32),
+      Duration(milliseconds: (1000 / 20).toInt()),
       (_) => setState(() {}),
     );
-  }
-
-  @override
-  void didUpdateWidget(covariant GridWidget<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (brush == oldWidget.pencil) {
-      brush = widget.pencil;
-    } else {
-      brush = widget.grid.defaultValue;
-    }
   }
 
   @override
@@ -174,7 +159,7 @@ class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProvider
   Widget build(BuildContext context) {
     final color = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
 
-    final colorWith = widget.colorWith ?? (i, j, value) => value == 0 ? null : color;
+    final colorWith = widget.colorWith ?? (_, _, value) => value ? color : null;
 
     return Listener(
       onPointerDown: onPointerDown,
@@ -196,11 +181,11 @@ class _GridWidgetState<T> extends State<GridWidget<T>> with SingleTickerProvider
   }
 }
 
-class GridPainter<T> extends CustomPainter {
-  final Grid<T> grid;
+class GridPainter extends CustomPainter {
+  final IGrid grid;
   final double zoom;
   final Offset offset;
-  final Color? Function(int i, int j, T value) colorWith;
+  final Color? Function(int i, int j, bool value) colorWith;
 
   GridPainter({
     required this.grid,
@@ -209,8 +194,9 @@ class GridPainter<T> extends CustomPainter {
     required this.colorWith,
   });
 
-  List<Coordinates> getChunks(Rect visibleRect) {
-    const chunkSize = 64.0;
+  List<Position> getChunks(Rect visibleRect) {
+    // TODO: This doesnt belong here
+    const chunkSize = 32.0;
 
     final firstI = (visibleRect.left / chunkSize).floor();
     final firstJ = (visibleRect.top / chunkSize).floor();
@@ -220,7 +206,7 @@ class GridPainter<T> extends CustomPainter {
 
     return [
       for (var j = firstJ; j <= lastJ; j++)
-        for (var i = firstI; i <= lastI; i++) Coordinates(i, j),
+        for (var i = firstI; i <= lastI; i++) (i: i, j: j),
     ];
   }
 
@@ -248,7 +234,8 @@ class GridPainter<T> extends CustomPainter {
         continue;
       }
 
-      for (final index in chunk.nonDefaultIndexes) {
+      for (final position in chunk.nonZeroPositions) {
+        final index = position.i * chunk.size + position.j;
         final i = index ~/ chunk.size;
         final j = index % chunk.size;
         final value = chunk.get(i, j);
