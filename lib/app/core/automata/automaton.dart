@@ -20,6 +20,8 @@ final class Automaton implements IAutomaton {
         neighborhood.set(i, j, true);
       }
     }
+
+    neighborhood.lock(0, 0);
   }
 
   @override
