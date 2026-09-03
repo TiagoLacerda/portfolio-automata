@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../../../core/grid/grid.dart';
 import '../chunk.dart';
@@ -14,8 +17,9 @@ class GridWidget extends StatefulWidget {
   final bool enableEditing;
   final bool enablePanAndZoom;
   final Color? Function(int i, int j, bool value)? colorWith;
+  final List<Color> backgroundColors;
 
-  const GridWidget({
+  GridWidget({
     super.key,
     required this.grid,
     this.initialZoom = 5.0,
@@ -23,7 +27,8 @@ class GridWidget extends StatefulWidget {
     this.enableEditing = true,
     this.enablePanAndZoom = true,
     this.colorWith,
-  });
+    List<Color>? backgroundColors,
+  }) : backgroundColors = backgroundColors ?? <Color>[Colors.black, Colors.white];
 
   @override
   State<GridWidget> createState() => _GridWidgetState();
@@ -41,6 +46,10 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
   int? previousJ;
 
   bool brush = true;
+
+  ImmutableBuffer? checkerboardImmutableBuffer;
+
+  ui.Image? checkerboardImage;
 
   void onPointerDown(PointerDownEvent event) {
     if (widget.enablePanAndZoom && event.buttons == kMiddleMouseButton) {
@@ -129,6 +138,51 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
     });
   }
 
+  void setupCheckerboard(BuildContext context) {
+    final color0 = widget.backgroundColors.first;
+    final color1 = widget.backgroundColors.last;
+
+    final bytes = Uint8List.fromList([
+      (color0.r * 255).round().clamp(0, 255),
+      (color0.g * 255).round().clamp(0, 255),
+      (color0.b * 255).round().clamp(0, 255),
+      (color0.a * 255).round().clamp(0, 255),
+      (color1.r * 255).round().clamp(0, 255),
+      (color1.g * 255).round().clamp(0, 255),
+      (color1.b * 255).round().clamp(0, 255),
+      (color1.a * 255).round().clamp(0, 255),
+      (color1.r * 255).round().clamp(0, 255),
+      (color1.g * 255).round().clamp(0, 255),
+      (color1.b * 255).round().clamp(0, 255),
+      (color1.a * 255).round().clamp(0, 255),
+      (color0.r * 255).round().clamp(0, 255),
+      (color0.g * 255).round().clamp(0, 255),
+      (color0.b * 255).round().clamp(0, 255),
+      (color0.a * 255).round().clamp(0, 255),
+    ]);
+
+    ImmutableBuffer.fromUint8List(bytes).then((buffer) {
+      checkerboardImmutableBuffer?.dispose();
+      checkerboardImmutableBuffer = buffer;
+
+      final descriptor = ui.ImageDescriptor.raw(
+        buffer,
+        width: 2,
+        height: 2,
+        pixelFormat: ui.PixelFormat.rgba8888,
+      );
+
+      descriptor.instantiateCodec().then((codec) {
+        codec.getNextFrame().then((frame) {
+          setState(() {
+            checkerboardImage?.dispose();
+            checkerboardImage = frame.image;
+          });
+        });
+      });
+    });
+  }
+
   Position screenToWorld(Offset position) {
     return (
       i: ((position.dx - offset.dx) / zoom).floor(),
@@ -147,11 +201,22 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
       Duration(milliseconds: (1000 / 20).toInt()),
       (_) => setState(() {}),
     );
+
+    setupCheckerboard(context);
+  }
+
+  @override
+  void didUpdateWidget(covariant GridWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    setupCheckerboard(context);
   }
 
   @override
   void dispose() {
     timer.cancel();
+    checkerboardImmutableBuffer?.dispose();
+    checkerboardImage?.dispose();
     super.dispose();
   }
 
@@ -173,6 +238,7 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
             zoom: zoom,
             offset: offset,
             colorWith: colorWith,
+            checkerboardImage: checkerboardImage,
           ),
           size: Size.infinite,
         ),
@@ -186,12 +252,14 @@ class GridPainter extends CustomPainter {
   final double zoom;
   final Offset offset;
   final Color? Function(int i, int j, bool value) colorWith;
+  final ui.Image? checkerboardImage;
 
   GridPainter({
     required this.grid,
     required this.zoom,
     required this.offset,
     required this.colorWith,
+    required this.checkerboardImage,
   });
 
   List<Position> getChunks(Rect visibleRect) {
@@ -209,8 +277,38 @@ class GridPainter extends CustomPainter {
     ];
   }
 
+  void paintCheckerboard(
+    Canvas canvas,
+    Size size,
+    ui.Image image,
+  ) {
+    final tileSize = zoom * 2;
+
+    final matrix = Matrix4.identity()
+      ..translateByVector2(Vector2(offset.dx, offset.dy))
+      ..scaleByVector3(Vector3(tileSize / image.width, tileSize / image.height, 1));
+
+    final shader = ui.ImageShader(
+      image,
+      TileMode.repeated,
+      TileMode.repeated,
+      matrix.storage,
+    );
+
+    final paint = Paint()
+      ..shader = shader
+      ..isAntiAlias = false;
+
+    canvas.drawRect(
+      Offset.zero & size,
+      paint,
+    );
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
+    if (checkerboardImage != null) paintCheckerboard(canvas, size, checkerboardImage!);
+
     final cellSize = zoom;
     final scaledChunkSize = grid.chunkSize * cellSize;
 

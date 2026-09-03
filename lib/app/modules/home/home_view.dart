@@ -100,7 +100,7 @@ class HomeView extends StatelessWidget {
           } else {
             cellColor = Colors.black;
             emptyColor0 = Color(0xFFF0F0F0);
-            emptyColor1 = Color(0xFFF1F1F1);
+            emptyColor1 = Color(0xFFE0E0E0);
           }
 
           return Scaffold(
@@ -146,6 +146,7 @@ class HomeView extends StatelessWidget {
                   child: SizedBox.expand(
                     child: GridWidget(
                       grid: controller.game.world,
+                      backgroundColors: [emptyColor0, emptyColor1],
                     ),
                   ),
                 ),
@@ -170,6 +171,7 @@ class HomeView extends StatelessWidget {
                             if ((i + j % 2) == 0) return emptyColor0;
                             return emptyColor1;
                           },
+                          backgroundColors: [emptyColor0, emptyColor1],
                         ),
                       ),
                     ],
