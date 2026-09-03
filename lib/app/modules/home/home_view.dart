@@ -4,6 +4,7 @@ import 'package:overlay_options_button/overlay_options_button.dart';
 import 'package:portfolio_design_system/portfolio_design_system.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../l10n/generated/modular_localization.dart';
 import '../../app_controller.dart';
 import '../../core/grid/widgets/grid_widget.dart';
 import 'home_controller.dart';
@@ -29,45 +30,53 @@ class HomeView extends StatelessWidget {
               Uri.parse('https://tiagomlbrasil.com'),
               webOnlyWindowName: '_self',
             ),
+            tooltip: ModularLocalization.localizations.modules.home.homeView.homeButtonTooltip,
             icon: Icon(
               Icons.arrow_back_rounded,
             ),
           );
 
-          final brightnessSwitch = PortfolioBrightnessSwitch(
-            onPressed: () => AppController.instance.toggleThemeMode(),
+          final brightnessSwitch = Tooltip(
+            message: ModularLocalization.localizations.modules.home.homeView.brightnessSwitchTooltip,
+            child: PortfolioBrightnessSwitch(
+              onPressed: () => AppController.instance.toggleThemeMode(),
+            ),
           );
 
-          final localeButton = OverlayOptionsButton(
-            initialValue: AppController.instance.locale,
-            items: AppController.instance.supportedLocales,
-            onChanged: (value) => AppController.instance.locale = value,
-            itemBuilder: (context, index, value, select) {
-              final assetName = switch (value.languageCode) {
-                'pt' => PortfolioIcons.pt,
-                'en' => PortfolioIcons.en,
-                _ => PortfolioIcons.pt,
-              };
+          final localeButton = Tooltip(
+            message: ModularLocalization.localizations.modules.home.homeView.localeButtonTooltip,
+            child: OverlayOptionsButton(
+              initialValue: AppController.instance.locale,
+              items: AppController.instance.supportedLocales,
+              onChanged: (value) => AppController.instance.locale = value,
+              itemBuilder: (context, index, value, select) {
+                final assetName = switch (value.languageCode) {
+                  'pt' => PortfolioIcons.pt,
+                  'en' => PortfolioIcons.en,
+                  _ => PortfolioIcons.pt,
+                };
 
-              return IconButton(
-                onPressed: () => select(),
-                icon: SizedBox.square(
-                  dimension: 24.0,
-                  child: ClipOval(
-                    child: SvgPicture.asset(
-                      assetName,
-                      fit: BoxFit.cover,
+                return IconButton(
+                  onPressed: () => select(),
+                  icon: SizedBox.square(
+                    dimension: 24.0,
+                    child: ClipOval(
+                      child: SvgPicture.asset(
+                        assetName,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
 
           final stepButton = IconButton(
             onPressed: () {
               controller.step();
             },
+            tooltip: ModularLocalization.localizations.modules.home.homeView.stepButtonTooltip,
             icon: Icon(
               Icons.skip_next_outlined,
             ),
@@ -77,6 +86,7 @@ class HomeView extends StatelessWidget {
             onPressed: () {
               controller.toggle();
             },
+            tooltip: ModularLocalization.localizations.modules.home.homeView.toggleButtonTooltip,
             icon: Icon(
               controller.running ? Icons.pause_outlined : Icons.play_arrow_outlined,
             ),
@@ -86,6 +96,7 @@ class HomeView extends StatelessWidget {
             onPressed: () {
               controller.game.clear();
             },
+            tooltip: ModularLocalization.localizations.modules.home.homeView.clearButtonTooltip,
             icon: Icon(
               Icons.delete_outline_rounded,
             ),

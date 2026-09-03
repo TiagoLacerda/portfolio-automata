@@ -1,1 +1,14 @@
-{}
+{
+    "modules": {
+        "home": {
+            "homeView": {
+                "homeButtonTooltip": "Página inicial",
+                "brightnessSwitchTooltip": "Modo claro/escuro",
+                "localeButtonTooltip": "Idioma",
+                "stepButtonTooltip": "Avançar",
+                "toggleButtonTooltip": "Iniciar/pausar",
+                "clearButtonTooltip": "Limpar"
+            }
+        }
+    }
+}

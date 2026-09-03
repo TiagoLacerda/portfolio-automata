@@ -25,5 +25,33 @@ abstract class ModularLocalizationEntries {
     return string;
   }
 
+  /// `en`: **"Dark/light mode"**
+  ///
+  /// `pt`: **"Modo claro/escuro"**
+  String get entry0;
 
+  /// `en`: **"Clear"**
+  ///
+  /// `pt`: **"Limpar"**
+  String get entry1;
+
+  /// `en`: **"Homepage"**
+  ///
+  /// `pt`: **"Página inicial"**
+  String get entry2;
+
+  /// `en`: **"Language"**
+  ///
+  /// `pt`: **"Idioma"**
+  String get entry3;
+
+  /// `en`: **"Step once"**
+  ///
+  /// `pt`: **"Avançar"**
+  String get entry4;
+
+  /// `en`: **"Play/pause"**
+  ///
+  /// `pt`: **"Iniciar/pausar"**
+  String get entry5;
 }
