@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:overlay_options_button/overlay_options_button.dart';
 import 'package:portfolio_design_system/portfolio_design_system.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../app_controller.dart';
 import '../../core/grid/widgets/grid_widget.dart';
@@ -23,6 +24,16 @@ class HomeView extends StatelessWidget {
       child: ListenableBuilder(
         listenable: controller,
         builder: (context, child) {
+          final homeButton = IconButton(
+            onPressed: () => launchUrl(
+              Uri.parse('https://tiagomlbrasil.com'),
+              webOnlyWindowName: '_self',
+            ),
+            icon: Icon(
+              Icons.arrow_back_rounded,
+            ),
+          );
+
           final brightnessSwitch = PortfolioBrightnessSwitch(
             onPressed: () => AppController.instance.toggleThemeMode(),
           );
@@ -83,10 +94,11 @@ class HomeView extends StatelessWidget {
                     child: PortfolioResponsiveBox(
                       child: Padding(
                         padding: EdgeInsetsGeometry.symmetric(
-                          horizontal: spacing,
+                          horizontal: 40.0,
                         ),
                         child: Row(
                           children: [
+                            homeButton,
                             brightnessSwitch,
                             localeButton,
                           ],
