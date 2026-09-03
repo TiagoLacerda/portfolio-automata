@@ -30,6 +30,12 @@ final class HomeController with ChangeNotifier {
     );
   }
 
+  void step() {
+    running = false;
+    game.update();
+    notifyListeners();
+  }
+
   void toggle() {
     running = !running;
     notifyListeners();

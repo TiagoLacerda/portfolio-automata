@@ -234,19 +234,16 @@ class GridPainter extends CustomPainter {
       }
 
       for (final position in chunk.nonZeroPositions) {
-        final index = position.i * chunk.size + position.j;
-        final i = index ~/ chunk.size;
-        final j = index % chunk.size;
-        final value = chunk.get(i, j);
-        final color = colorWith(i, j, value);
+        final value = chunk.get(position.i, position.j);
+        final color = colorWith(position.i, position.j, value);
 
         if (color == null) continue;
         if (color != paint.color) paint.color = color;
 
         canvas.drawRect(
           Rect.fromLTWH(
-            coordinates.i * scaledChunkSize + i * cellSize + offset.dx,
-            coordinates.j * scaledChunkSize + j * cellSize + offset.dy,
+            coordinates.i * scaledChunkSize + position.i * cellSize + offset.dx,
+            coordinates.j * scaledChunkSize + position.j * cellSize + offset.dy,
             cellSize,
             cellSize,
           ),

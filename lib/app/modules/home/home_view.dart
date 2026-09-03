@@ -64,6 +64,15 @@ class HomeView extends StatelessWidget {
             },
           );
 
+          final stepButton = IconButton(
+            onPressed: () {
+              controller.step();
+            },
+            icon: Icon(
+              Icons.skip_next_outlined,
+            ),
+          );
+
           final toggleButton = IconButton(
             onPressed: () {
               controller.toggle();
@@ -82,7 +91,17 @@ class HomeView extends StatelessWidget {
             ),
           );
 
-          final cellColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
+          Color cellColor, emptyColor0, emptyColor1;
+
+          if (Theme.of(context).brightness == Brightness.dark) {
+            cellColor = Colors.white;
+            emptyColor0 = Color(0xFF0F0F0F);
+            emptyColor1 = Color(0xFF1F1F1F);
+          } else {
+            cellColor = Colors.black;
+            emptyColor0 = Color(0xFFF0F0F0);
+            emptyColor1 = Color(0xFFF1F1F1);
+          }
 
           return Scaffold(
             appBar: AppBar(
@@ -117,6 +136,7 @@ class HomeView extends StatelessWidget {
                   child: Column(
                     spacing: spacing,
                     children: [
+                      stepButton,
                       toggleButton,
                       clearButton,
                     ],
@@ -146,7 +166,9 @@ class HomeView extends StatelessWidget {
                           enablePanAndZoom: false,
                           colorWith: (i, j, value) {
                             if (i == 0 && j == 0) return Colors.red;
-                            return value ? cellColor : null;
+                            if (value) return cellColor;
+                            if ((i + j % 2) == 0) return emptyColor0;
+                            return emptyColor1;
                           },
                         ),
                       ),
