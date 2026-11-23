@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/generated/modular_localization.dart';
 import '../../app_controller.dart';
+import '../../core/grid/grid_theme.dart';
 import '../../core/grid/widgets/grid_widget.dart';
 import 'home_controller.dart';
 
@@ -94,7 +95,7 @@ class HomeView extends StatelessWidget {
 
           final clearButton = IconButton(
             onPressed: () {
-              controller.game.clear();
+              controller.clear();
             },
             tooltip: ModularLocalization.localizations.modules.home.homeView.clearButtonTooltip,
             icon: Icon(
@@ -102,17 +103,7 @@ class HomeView extends StatelessWidget {
             ),
           );
 
-          Color cellColor, emptyColor0, emptyColor1;
-
-          if (Theme.of(context).brightness == Brightness.dark) {
-            cellColor = Colors.white;
-            emptyColor0 = Color(0xFF0F0F0F);
-            emptyColor1 = Color(0xFF1F1F1F);
-          } else {
-            cellColor = Colors.black;
-            emptyColor0 = Color(0xFFF0F0F0);
-            emptyColor1 = Color(0xFFE0E0E0);
-          }
+          final gridTheme = GridTheme.of(context);
 
           return Scaffold(
             appBar: AppBar(
@@ -157,7 +148,6 @@ class HomeView extends StatelessWidget {
                   child: SizedBox.expand(
                     child: GridWidget(
                       grid: controller.game.world,
-                      backgroundColors: [emptyColor0, emptyColor1],
                     ),
                   ),
                 ),
@@ -169,7 +159,7 @@ class HomeView extends StatelessWidget {
                       Container(
                         width: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
                         height: (controller.neighborhoodGridSize * controller.neighborhoodGridCellSize).toDouble(),
-                        color: cellColor.withValues(alpha: 0.5),
+                        color: gridTheme.cellColor.withValues(alpha: 0.5),
                         child: GridWidget(
                           grid: controller.game.neighborhood,
                           initialZoom: controller.initialZoom,
@@ -178,11 +168,10 @@ class HomeView extends StatelessWidget {
                           enablePanAndZoom: false,
                           colorWith: (i, j, value) {
                             if (i == 0 && j == 0) return Colors.red;
-                            if (value) return cellColor;
-                            if ((i + j % 2) == 0) return emptyColor0;
-                            return emptyColor1;
+                            if (value) return gridTheme.cellColor;
+                            if ((i + j % 2) == 0) return gridTheme.gridColor0;
+                            return gridTheme.gridColor1;
                           },
-                          backgroundColors: [emptyColor0, emptyColor1],
                         ),
                       ),
                     ],

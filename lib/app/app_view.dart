@@ -4,6 +4,7 @@ import 'package:portfolio_design_system/portfolio_design_system.dart';
 
 import '../l10n/generated/modular_localization.dart';
 import 'app_controller.dart';
+import 'core/grid/grid_theme.dart';
 import 'core/router/router.dart';
 
 class AppView extends StatelessWidget {
@@ -25,8 +26,12 @@ class AppView extends StatelessWidget {
             key: ValueKey(controller.locale),
             scaffoldMessengerKey: controller.scaffoldMessengerKey,
             title: 'Automata',
-            theme: PortfolioTheme.light,
-            darkTheme: PortfolioTheme.dark,
+            theme: PortfolioTheme.light.copyWith(
+              extensions: [...PortfolioTheme.light.extensions.values, GridTheme.light],
+            ),
+            darkTheme: PortfolioTheme.dark.copyWith(
+              extensions: [...PortfolioTheme.dark.extensions.values, GridTheme.dark],
+            ),
             themeMode: controller.themeMode,
             debugShowCheckedModeBanner: false,
             locale: controller.locale,

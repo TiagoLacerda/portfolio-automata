@@ -41,6 +41,11 @@ final class HomeController with ChangeNotifier {
     notifyListeners();
   }
 
+  void clear() {
+    game.clear();
+    notifyListeners();
+  }
+
   void update() {
     game.update();
     notifyListeners();
