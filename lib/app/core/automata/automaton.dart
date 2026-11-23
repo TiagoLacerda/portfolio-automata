@@ -4,6 +4,15 @@ abstract interface class IAutomaton {
   IGrid get world;
   IGrid get neighborhood;
 
+  int get survivalMin;
+  set survivalMin(int value);
+  int get survivalMax;
+  set survivalMax(int value);
+  int get birthMin;
+  set birthMin(int value);
+  int get birthMax;
+  set birthMax(int value);
+
   bool get(int i, int j);
   void set(int i, int j, bool value);
   void clear();
@@ -13,6 +22,11 @@ abstract interface class IAutomaton {
 
 final class Automaton implements IAutomaton {
   UInt32Grid _world;
+
+  int _survivalMin = 2;
+  int _survivalMax = 3;
+  int _birthMin = 3;
+  int _birthMax = 3;
 
   Automaton() : _world = UInt32Grid(), neighborhood = UInt32Grid() {
     for (int i = -1; i <= 1; ++i) {
@@ -29,6 +43,30 @@ final class Automaton implements IAutomaton {
 
   @override
   final UInt32Grid neighborhood;
+
+  @override
+  int get survivalMin => _survivalMin;
+
+  @override
+  set survivalMin(int value) => _survivalMin = value.clamp(0, _survivalMax);
+
+  @override
+  int get survivalMax => _survivalMax;
+
+  @override
+  set survivalMax(int value) => _survivalMax = value < _survivalMin ? _survivalMin : value;
+
+  @override
+  int get birthMin => _birthMin;
+
+  @override
+  set birthMin(int value) => _birthMin = value.clamp(0, _birthMax);
+
+  @override
+  int get birthMax => _birthMax;
+
+  @override
+  set birthMax(int value) => _birthMax = value < _birthMin ? _birthMin : value;
 
   @override
   bool get(int i, int j) => _world.get(i, j);
@@ -63,7 +101,7 @@ final class Automaton implements IAutomaton {
         }
       }
 
-      final survives = neighborsAlive == 2 || neighborsAlive == 3;
+      final survives = neighborsAlive >= _survivalMin && neighborsAlive <= _survivalMax;
 
       if (survives) {
         next.set(position.i, position.j, true);
@@ -86,7 +124,7 @@ final class Automaton implements IAutomaton {
         }
       }
 
-      final born = neighborsAlive >= 3 && neighborsAlive <= 3;
+      final born = neighborsAlive >= _birthMin && neighborsAlive <= _birthMax;
 
       if (born) {
         next.set(i, j, true);
