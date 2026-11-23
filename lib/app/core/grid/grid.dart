@@ -28,41 +28,15 @@ abstract interface class IGrid {
 
   /// Unlocks the cell at the given world coordinates.
   void unlock(int i, int j);
-
-  /// Converts world coordinates to chunk coordinates.
-  static Position getChunkPosition(int i, int j, int chunkSize) {
-    int convert(int value, int chunkSize) {
-      final result = value ~/ chunkSize;
-
-      if (value < 0 && value % chunkSize != 0) {
-        return result - 1;
-      }
-
-      return result;
-    }
-
-    return (
-      i: convert(i, chunkSize),
-      j: convert(j, chunkSize),
-    );
-  }
-
-  /// Converts world coordinates to local chunk coordinates.
-  static Position getLocalPosition(int i, int j, int chunkSize) {
-    int convert(int value, int chunkSize) {
-      final result = value % chunkSize;
-      return result < 0 ? result + chunkSize : result;
-    }
-
-    return (
-      i: convert(i, chunkSize),
-      j: convert(j, chunkSize),
-    );
-  }
 }
 
 final class UInt32Grid implements IGrid {
-  static const int _chunkSize = 32;
+  static const int _chunkShift = 5;
+  static const int _chunkSize = 1 << _chunkShift;
+  static const int _chunkMask = _chunkSize - 1;
+
+  // Dart web handles >> as unsigned.
+  static int _chunkCoord(int v) => (v - (v & _chunkMask)) ~/ _chunkSize;
 
   final Map<Position, UInt32Chunk> _chunks;
 
@@ -96,14 +70,11 @@ final class UInt32Grid implements IGrid {
 
   @override
   bool get(int i, int j) {
-    final chunkPosition = IGrid.getChunkPosition(i, j, chunkSize);
-    final chunk = _chunks[chunkPosition];
+    final chunk = _chunks[(i: _chunkCoord(i), j: _chunkCoord(j))];
 
     if (chunk == null) return false;
 
-    final cellPosition = IGrid.getLocalPosition(i, j, chunkSize);
-
-    return chunk.get(cellPosition.i, cellPosition.j);
+    return chunk.get(i & _chunkMask, j & _chunkMask);
   }
 
   @override
@@ -112,8 +83,9 @@ final class UInt32Grid implements IGrid {
 
     if (_locked.contains(position)) return;
 
-    final chunkPosition = IGrid.getChunkPosition(i, j, chunkSize);
-    final localPosition = IGrid.getLocalPosition(i, j, chunkSize);
+    final chunkPosition = (i: _chunkCoord(i), j: _chunkCoord(j));
+    final localI = i & _chunkMask;
+    final localJ = j & _chunkMask;
 
     if (value) {
       final chunk = _chunks.putIfAbsent(
@@ -121,13 +93,13 @@ final class UInt32Grid implements IGrid {
         () => UInt32Chunk(),
       );
 
-      chunk.set(localPosition.i, localPosition.j, value);
+      chunk.set(localI, localJ, value);
     } else {
       final chunk = _chunks[chunkPosition];
 
       if (chunk == null) return;
 
-      chunk.set(localPosition.i, localPosition.j, value);
+      chunk.set(localI, localJ, value);
 
       if (chunk.isEmpty) {
         _chunks.remove(chunkPosition);
