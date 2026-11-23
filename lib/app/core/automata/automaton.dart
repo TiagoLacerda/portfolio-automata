@@ -83,12 +83,15 @@ final class Automaton implements IAutomaton {
 
     final Set<(int, int)> candidatesToBeBorn = {};
 
+    final offsets = [
+      for (final delta in neighborhood.nonZeroPositions)
+        if (delta.i != 0 || delta.j != 0) delta,
+    ];
+
     for (final position in _world.nonZeroPositions) {
       int neighborsAlive = 0;
 
-      for (final delta in neighborhood.nonZeroPositions) {
-        if (delta.i == 0 && delta.j == 0) continue;
-
+      for (final delta in offsets) {
         final ni = position.i + delta.i;
         final nj = position.j + delta.j;
 
@@ -111,9 +114,7 @@ final class Automaton implements IAutomaton {
     for (final (i, j) in candidatesToBeBorn) {
       int neighborsAlive = 0;
 
-      for (final delta in neighborhood.nonZeroPositions) {
-        if (delta.i == 0 && delta.j == 0) continue;
-
+      for (final delta in offsets) {
         final ni = i + delta.i;
         final nj = j + delta.j;
 
