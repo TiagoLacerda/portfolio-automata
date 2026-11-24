@@ -166,11 +166,9 @@ class HomeView extends StatelessWidget {
                           initalOffset: controller.initialOffset,
                           enableEditing: true,
                           enablePanAndZoom: false,
-                          colorWith: (i, j, value) {
+                          colorWith: (i, j, _) {
                             if (i == 0 && j == 0) return Colors.red;
-                            if (value) return gridTheme.cellColor;
-                            if ((i + j % 2) == 0) return gridTheme.gridColor0;
-                            return gridTheme.gridColor1;
+                            return gridTheme.cellColor;
                           },
                         ),
                       ),
