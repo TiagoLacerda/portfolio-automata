@@ -1,3 +1,4 @@
+import '../grid/chunk.dart';
 import '../grid/grid.dart';
 
 abstract interface class IAutomaton {
@@ -81,54 +82,39 @@ final class Automaton implements IAutomaton {
   void update() {
     final next = UInt32Grid();
 
-    final Set<(int, int)> candidatesToBeBorn = {};
-
     final offsets = [
       for (final delta in neighborhood.nonZeroPositions)
         if (delta.i != 0 || delta.j != 0) delta,
     ];
 
+    final Map<Position, int> neighborsAlive = {};
+
+    // Cell c counts live cells at c + delta, so live cell x adds to x - delta.
     for (final position in _world.nonZeroPositions) {
-      int neighborsAlive = 0;
-
       for (final delta in offsets) {
-        final ni = position.i + delta.i;
-        final nj = position.j + delta.j;
-
-        final neighbor = _world.get(ni, nj);
-
-        if (neighbor) {
-          neighborsAlive += 1;
-        } else {
-          candidatesToBeBorn.add((ni, nj));
-        }
+        final key = (i: position.i - delta.i, j: position.j - delta.j);
+        neighborsAlive[key] = (neighborsAlive[key] ?? 0) + 1;
       }
+    }
 
-      final survives = neighborsAlive >= _survivalMin && neighborsAlive <= _survivalMax;
+    for (final MapEntry(key: position, value: count) in neighborsAlive.entries) {
+      final alive = _world.get(position.i, position.j);
 
-      if (survives) {
+      final lives = alive
+          ? count >= _survivalMin && count <= _survivalMax
+          : count >= _birthMin && count <= _birthMax;
+
+      if (lives) {
         next.set(position.i, position.j, true);
       }
     }
 
-    for (final (i, j) in candidatesToBeBorn) {
-      int neighborsAlive = 0;
-
-      for (final delta in offsets) {
-        final ni = i + delta.i;
-        final nj = j + delta.j;
-
-        final neighbor = _world.get(ni, nj);
-
-        if (neighbor) {
-          neighborsAlive += 1;
+    // Live cells with no live neighbors never got a count.
+    if (_survivalMin == 0) {
+      for (final position in _world.nonZeroPositions) {
+        if (!neighborsAlive.containsKey(position)) {
+          next.set(position.i, position.j, true);
         }
-      }
-
-      final born = neighborsAlive >= _birthMin && neighborsAlive <= _birthMax;
-
-      if (born) {
-        next.set(i, j, true);
       }
     }
 
