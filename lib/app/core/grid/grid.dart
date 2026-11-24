@@ -11,6 +11,9 @@ abstract interface class IGrid {
   /// Positions of all cells whose value is true.
   Iterable<Position> get nonZeroPositions;
 
+  /// Chunk coordinates of all non-empty chunks.
+  Iterable<Position> get chunkPositions;
+
   /// Returns the chunk containing the given world coordinates, if present.
   IChunk? getChunk(int i, int j);
 
@@ -64,6 +67,9 @@ final class UInt32Grid implements IGrid {
       }
     }
   }
+
+  @override
+  Iterable<Position> get chunkPositions => _chunks.keys;
 
   @override
   UInt32Chunk? getChunk(int i, int j) => _chunks[(i: i, j: j)];

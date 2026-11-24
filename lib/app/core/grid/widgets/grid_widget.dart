@@ -150,8 +150,6 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final gridTheme = GridTheme.of(context);
 
-    final colorWith = widget.colorWith ?? (_, _, value) => value ? gridTheme.cellColor : null;
-
     return Listener(
       onPointerDown: onPointerDown,
       onPointerMove: onPointerMove,
@@ -163,7 +161,8 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
             grid: widget.grid,
             zoom: zoom,
             offset: offset,
-            colorWith: colorWith,
+            colorWith: widget.colorWith,
+            cellColor: gridTheme.cellColor,
             gridColor0: gridTheme.gridColor0,
             gridColor1: gridTheme.gridColor1,
           ),
@@ -178,7 +177,8 @@ class GridPainter extends CustomPainter {
   final IGrid grid;
   final double zoom;
   final Offset offset;
-  final Color? Function(int i, int j, bool value) colorWith;
+  final Color? Function(int i, int j, bool value)? colorWith;
+  final Color cellColor;
   final Color gridColor0;
   final Color gridColor1;
 
@@ -200,22 +200,35 @@ class GridPainter extends CustomPainter {
     required this.zoom,
     required this.offset,
     required this.colorWith,
+    required this.cellColor,
     required this.gridColor0,
     required this.gridColor1,
   });
 
-  List<Position> getChunks(Rect visibleRect) {
+  /// Coordinates of the existing chunks that overlap [visibleRect].
+  List<Position> getVisibleChunks(Rect visibleRect) {
     final chunkSize = grid.chunkSize;
 
     final firstI = (visibleRect.left / chunkSize).floor();
     final firstJ = (visibleRect.top / chunkSize).floor();
 
-    final lastI = ((visibleRect.right - 1) / chunkSize).floor();
-    final lastJ = ((visibleRect.bottom - 1) / chunkSize).floor();
+    final lastI = (visibleRect.right / chunkSize).floor();
+    final lastJ = (visibleRect.bottom / chunkSize).floor();
+
+    final chunkPositions = grid.chunkPositions;
+
+    // Zoomed out, visible slots can far outnumber existing chunks.
+    if ((lastI - firstI + 1) * (lastJ - firstJ + 1) > chunkPositions.length) {
+      return [
+        for (final position in chunkPositions)
+          if (position.i >= firstI && position.i <= lastI && position.j >= firstJ && position.j <= lastJ) position,
+      ];
+    }
 
     return [
       for (var j = firstJ; j <= lastJ; j++)
-        for (var i = firstI; i <= lastI; i++) (i: i, j: j),
+        for (var i = firstI; i <= lastI; i++)
+          if (grid.getChunk(i, j) != null) (i: i, j: j),
     ];
   }
 
@@ -266,22 +279,16 @@ class GridPainter extends CustomPainter {
       size.height / zoom,
     );
 
-    for (final coordinates in getChunks(visibleRect)) {
-      final chunk = grid.getChunk(
-        coordinates.i,
-        coordinates.j,
-      );
+    final colorWith = this.colorWith;
 
-      if (chunk == null) {
-        continue;
-      }
+    for (final coordinates in getVisibleChunks(visibleRect)) {
+      final chunk = grid.getChunk(coordinates.i, coordinates.j)!;
 
       final chunkI = coordinates.i * grid.chunkSize;
       final chunkJ = coordinates.j * grid.chunkSize;
 
       for (final position in chunk.nonZeroPositions) {
-        final value = chunk.get(position.i, position.j);
-        final color = colorWith(chunkI + position.i, chunkJ + position.j, value);
+        final color = colorWith == null ? cellColor : colorWith(chunkI + position.i, chunkJ + position.j, true);
 
         if (color == null) continue;
         if (color != paint.color) paint.color = color;
