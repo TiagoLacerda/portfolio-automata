@@ -11,7 +11,7 @@ abstract interface class IChunk {
   bool get isEmpty;
 
   /// Positions of all cells whose value is true.
-  Set<Position> get nonZeroPositions;
+  Iterable<Position> get nonZeroPositions;
 
   /// Returns the value at the given local coordinates.
   bool get(int i, int j);
@@ -28,36 +28,49 @@ final class UInt32Chunk implements IChunk {
 
   final Uint32List _data;
 
+  int _count = 0;
+
   UInt32Chunk() : _data = Uint32List(_size);
 
   @override
-  final Set<Position> nonZeroPositions = {};
+  Iterable<Position> get nonZeroPositions sync* {
+    for (int i = 0; i < _size; ++i) {
+      int row = _data[i];
+
+      while (row != 0) {
+        // Two's complement: row & -row keeps only the lowest set bit.
+        final lowest = row & -row;
+
+        yield (i: i, j: lowest.bitLength - 1);
+
+        row ^= lowest;
+      }
+    }
+  }
 
   @override
   int get size => _size;
 
   @override
-  bool get isEmpty => nonZeroPositions.isEmpty;
+  bool get isEmpty => _count == 0;
 
   @override
   bool get(int i, int j) => (_data[i] & (1 << j)) != 0;
 
   @override
   void set(int i, int j, bool value) {
-    final position = (i: i, j: j);
+    final mask = 1 << j;
+    final row = _data[i];
 
-    if (value) {
-      _data[i] |= 1 << j;
-      nonZeroPositions.add(position);
-    } else {
-      _data[i] &= ~(1 << j);
-      nonZeroPositions.remove(position);
-    }
+    if (((row & mask) != 0) == value) return;
+
+    _data[i] = row ^ mask;
+    _count += value ? 1 : -1;
   }
 
   @override
   void clear() {
     _data.fillRange(0, size, 0);
-    nonZeroPositions.clear();
+    _count = 0;
   }
 }
