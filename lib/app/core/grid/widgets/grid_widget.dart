@@ -276,9 +276,12 @@ class GridPainter extends CustomPainter {
         continue;
       }
 
+      final chunkI = coordinates.i * grid.chunkSize;
+      final chunkJ = coordinates.j * grid.chunkSize;
+
       for (final position in chunk.nonZeroPositions) {
         final value = chunk.get(position.i, position.j);
-        final color = colorWith(position.i, position.j, value);
+        final color = colorWith(chunkI + position.i, chunkJ + position.j, value);
 
         if (color == null) continue;
         if (color != paint.color) paint.color = color;
