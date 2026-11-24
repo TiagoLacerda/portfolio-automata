@@ -155,18 +155,20 @@ class _GridWidgetState extends State<GridWidget> with SingleTickerProviderStateM
       onPointerMove: onPointerMove,
       onPointerUp: onPointerUp,
       onPointerSignal: onPointerSignal,
-      child: ClipRect(
-        child: CustomPaint(
-          painter: GridPainter(
-            grid: widget.grid,
-            zoom: zoom,
-            offset: offset,
-            colorWith: widget.colorWith,
-            cellColor: gridTheme.cellColor,
-            gridColor0: gridTheme.gridColor0,
-            gridColor1: gridTheme.gridColor1,
+      child: RepaintBoundary(
+        child: ClipRect(
+          child: CustomPaint(
+            painter: GridPainter(
+              grid: widget.grid,
+              zoom: zoom,
+              offset: offset,
+              colorWith: widget.colorWith,
+              cellColor: gridTheme.cellColor,
+              gridColor0: gridTheme.gridColor0,
+              gridColor1: gridTheme.gridColor1,
+            ),
+            size: Size.infinite,
           ),
-          size: Size.infinite,
         ),
       ),
     );
