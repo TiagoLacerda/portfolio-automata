@@ -17,6 +17,7 @@ abstract interface class IAutomaton {
   bool get(int i, int j);
   void set(int i, int j, bool value);
   void clear();
+  void reset();
 
   void update();
 }
@@ -30,13 +31,7 @@ final class Automaton implements IAutomaton {
   int _birthMax = 3;
 
   Automaton() : _world = UInt32Grid(), neighborhood = UInt32Grid() {
-    for (int i = -1; i <= 1; ++i) {
-      for (int j = -1; j <= 1; ++j) {
-        neighborhood.set(i, j, true);
-      }
-    }
-
-    neighborhood.lock(0, 0);
+    reset();
   }
 
   @override
@@ -77,6 +72,26 @@ final class Automaton implements IAutomaton {
 
   @override
   void clear() => _world.clear();
+
+  @override
+  void reset() {
+    _world.clear();
+
+    neighborhood.clear();
+
+    for (int i = -1; i <= 1; ++i) {
+      for (int j = -1; j <= 1; ++j) {
+        neighborhood.set(i, j, true);
+      }
+    }
+
+    neighborhood.lock(0, 0);
+
+    _survivalMin = 2;
+    _survivalMax = 3;
+    _birthMin = 3;
+    _birthMax = 3;
+  }
 
   @override
   void update() {

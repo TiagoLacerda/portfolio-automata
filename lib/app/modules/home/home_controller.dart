@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../core/automata/automaton.dart';
+import '../../core/automata/cell_pattern.dart';
 
 final class HomeController with ChangeNotifier {
   final game = Automaton();
@@ -13,6 +14,8 @@ final class HomeController with ChangeNotifier {
   final targetUPS = 20;
 
   bool running = false;
+
+  CellPattern? pattern;
 
   final neighborhoodGridSize = 9;
 
@@ -30,6 +33,10 @@ final class HomeController with ChangeNotifier {
   Duration _lastElapsed = Duration.zero;
 
   double _pendingUpdates = 0;
+
+  HomeController() {
+    _load(CellPattern.gosperGliderGun);
+  }
 
   @override
   void dispose() {
@@ -58,9 +65,44 @@ final class HomeController with ChangeNotifier {
     notifyListeners();
   }
 
+  ({double zoom, Offset offset}) framing(Size size) {
+    final pattern = this.pattern;
+
+    if (pattern == null) return (zoom: 5.0, offset: Offset.zero);
+
+    final zoom = min(size.width / (pattern.width * 4), size.height / (pattern.height * 4)).clamp(1.0, 20.0);
+
+    return (
+      zoom: zoom,
+      offset: Offset(
+        (size.width - pattern.width * zoom) / 2,
+        (size.height - pattern.height * zoom) / 2,
+      ),
+    );
+  }
+
   void clear() {
     game.clear();
-    generation.value++;
+    pattern = null;
+    generation.value = 0;
+    notifyListeners();
+  }
+
+  void _load(CellPattern pattern) {
+    game.reset();
+
+    for (final cell in pattern.cells) {
+      game.set(cell.i, cell.j, true);
+    }
+
+    this.pattern = pattern;
+    generation.value = 0;
+
+    if (running) {
+      notifyListeners();
+    } else {
+      toggle();
+    }
   }
 
   void _update() {

@@ -146,11 +146,19 @@ class HomeView extends StatelessWidget {
                 ),
                 Expanded(
                   child: SizedBox.expand(
-                    child: ListenableBuilder(
-                      listenable: controller.generation,
-                      builder: (context, child) {
-                        return GridWidget(
-                          grid: controller.game.world,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final framing = controller.framing(constraints.biggest);
+
+                        return ListenableBuilder(
+                          listenable: controller.generation,
+                          builder: (context, child) {
+                            return GridWidget(
+                              grid: controller.game.world,
+                              initialZoom: framing.zoom,
+                              initalOffset: framing.offset,
+                            );
+                          },
                         );
                       },
                     ),
