@@ -1,11 +1,11 @@
 import 'grid.dart';
 
 extension Bresenham on IGrid {
-  void bresenham(int i, int j, int y, int x, bool value) {
-    var x0 = i;
-    var y0 = j;
-    final x1 = y;
-    final y1 = x;
+  void bresenham(int i0, int j0, int i1, int j1, bool value) {
+    var x0 = i0;
+    var y0 = j0;
+    final x1 = i1;
+    final y1 = j1;
 
     final dx = (x1 - x0).abs();
     final dy = (y1 - y0).abs();

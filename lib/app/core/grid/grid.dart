@@ -14,7 +14,7 @@ abstract interface class IGrid {
   /// Chunk coordinates of all non-empty chunks.
   Iterable<Position> get chunkPositions;
 
-  /// Returns the chunk containing the given world coordinates, if present.
+  /// Returns the chunk at the given chunk coordinates, if present.
   IChunk? getChunk(int i, int j);
 
   /// Returns the value at the given world coordinates.
@@ -23,7 +23,7 @@ abstract interface class IGrid {
   /// Sets the value at the given world coordinates.
   void set(int i, int j, bool value);
 
-  /// Clears all cells in the grid.
+  /// Clears and unlocks all cells in the grid.
   void clear();
 
   /// Locks the cell at the given world coordinates.
@@ -34,8 +34,7 @@ abstract interface class IGrid {
 }
 
 final class UInt32Grid implements IGrid {
-  static const int _chunkShift = 5;
-  static const int _chunkSize = 1 << _chunkShift;
+  static const int _chunkSize = 32;
   static const int _chunkMask = _chunkSize - 1;
 
   // Dart web handles >> as unsigned.
@@ -51,7 +50,7 @@ final class UInt32Grid implements IGrid {
   int get chunkSize => _chunkSize;
 
   @override
-  bool get isEmpty => nonZeroPositions.isEmpty;
+  bool get isEmpty => _chunks.isEmpty;
 
   @override
   Iterable<Position> get nonZeroPositions sync* {
@@ -61,8 +60,8 @@ final class UInt32Grid implements IGrid {
 
       for (final position in chunk.nonZeroPositions) {
         yield (
-          i: chunkPosition.i * chunk.size + position.i,
-          j: chunkPosition.j * chunk.size + position.j,
+          i: chunkPosition.i * _chunkSize + position.i,
+          j: chunkPosition.j * _chunkSize + position.j,
         );
       }
     }
@@ -116,6 +115,7 @@ final class UInt32Grid implements IGrid {
   @override
   void clear() {
     _chunks.clear();
+    _locked.clear();
   }
 
   @override
