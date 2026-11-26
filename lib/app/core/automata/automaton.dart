@@ -115,9 +115,7 @@ final class Automaton implements IAutomaton {
     for (final MapEntry(key: position, value: count) in neighborsAlive.entries) {
       final alive = _world.get(position.i, position.j);
 
-      final lives = alive
-          ? count >= _survivalMin && count <= _survivalMax
-          : count >= _birthMin && count <= _birthMax;
+      final lives = alive ? count >= _survivalMin && count <= _survivalMax : count >= _birthMin && count <= _birthMax;
 
       if (lives) {
         next.set(position.i, position.j, true);
