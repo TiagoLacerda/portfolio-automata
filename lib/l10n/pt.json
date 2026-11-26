@@ -1,4 +1,7 @@
 {
+    "appView": {
+        "title": "Tiago Lacerda - Jogo da Vida"
+    },
     "modules": {
         "home": {
             "homeView": {

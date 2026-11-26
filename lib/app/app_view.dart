@@ -25,7 +25,7 @@ class AppView extends StatelessWidget {
           child: MaterialApp.router(
             key: ValueKey(controller.locale),
             scaffoldMessengerKey: controller.scaffoldMessengerKey,
-            title: 'Automata',
+            onGenerateTitle: (context) => ModularLocalization.localizations.appView.title,
             theme: PortfolioTheme.light.copyWith(
               extensions: [...PortfolioTheme.light.extensions.values, GridTheme.light],
             ),

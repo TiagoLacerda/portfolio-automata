@@ -1,4 +1,7 @@
 {
+    "appView": {
+        "title": "Tiago Lacerda - Game of Life"
+    },
     "modules": {
         "home": {
             "homeView": {

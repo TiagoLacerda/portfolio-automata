@@ -1,11 +1,11 @@
 {
-    "name": "automata",
-    "short_name": "automata",
+    "name": "portfolio-automata",
+    "short_name": "portfolio-automata",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F0F0F0",
+    "theme_color": "#2FB5B7",
+    "description": "Uma implementação interativa do Jogo da Vida de Conway, com vizinhança modificável e grade ilimitada.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
