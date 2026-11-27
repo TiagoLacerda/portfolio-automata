@@ -4,7 +4,7 @@ version: 1.0.0+1
 publish_to: 'none'
 
 environment:
-  sdk: ^3.13.0
+  sdk: ^3.14.0
 
 dependencies:
   flutter:
@@ -13,9 +13,10 @@ dependencies:
     sdk: flutter
 
   portfolio_design_system:
-    path: ../portfolio-design-system
-    # git:
-    #   url: git@github.com/tiagolacerda/portfolio-design-system   
+    git:
+      url: https://github.com/TiagoLacerda/portfolio-design-system.git
+      tag_pattern: v{{version}}
+    version: ^1.0.0
 
   overflow_fallback_widget: ^0.0.2
   overlay_options_button: ^0.0.1
