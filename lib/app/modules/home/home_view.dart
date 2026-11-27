@@ -37,6 +37,22 @@ class HomeView extends StatelessWidget {
             ),
           );
 
+          final githubButton = IconButton(
+            onPressed: () => launchUrl(
+              Uri.parse('https://github.com/TiagoLacerda/portfolio-automata'),
+            ),
+            tooltip: ModularLocalization.localizations.modules.home.homeView.githubButtonTooltip,
+            icon: SvgPicture.asset(
+              PortfolioIcons.github,
+              width: 24.0,
+              height: 24.0,
+              colorFilter: ColorFilter.mode(
+                ColorScheme.of(context).onSurface,
+                BlendMode.srcIn,
+              ),
+            ),
+          );
+
           final brightnessSwitch = Tooltip(
             message: ModularLocalization.localizations.modules.home.homeView.brightnessSwitchTooltip,
             child: PortfolioBrightnessSwitch(
@@ -122,6 +138,7 @@ class HomeView extends StatelessWidget {
                             homeButton,
                             brightnessSwitch,
                             localeButton,
+                            githubButton,
                           ],
                         ),
                       ),

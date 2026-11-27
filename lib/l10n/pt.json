@@ -8,6 +8,7 @@
                 "homeButtonTooltip": "Página inicial",
                 "brightnessSwitchTooltip": "Modo claro/escuro",
                 "localeButtonTooltip": "Idioma",
+                "githubButtonTooltip": "Repositório no GitHub",
                 "stepButtonTooltip": "Avançar",
                 "toggleButtonTooltip": "Iniciar/pausar",
                 "clearButtonTooltip": "Limpar"
